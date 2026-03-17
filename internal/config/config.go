@@ -12,6 +12,7 @@ type Config struct {
 	ShortBreakDuration time.Duration `json:"short_break_duration"`
 	LongBreakDuration  time.Duration `json:"long_break_duration"`
 	LongBreakInterval  int           `json:"long_break_interval"`
+	DailyGoalPomodoros int           `json:"daily_goal_pomodoros"`
 	NotifyDesktop      bool          `json:"notify_desktop"`
 	NotifyBell         bool          `json:"notify_bell"`
 }
@@ -22,6 +23,7 @@ func DefaultConfig() Config {
 		ShortBreakDuration: 5 * time.Minute,
 		LongBreakDuration:  15 * time.Minute,
 		LongBreakInterval:  4,
+		DailyGoalPomodoros: 0,
 		NotifyDesktop:      true,
 		NotifyBell:         true,
 	}
@@ -53,6 +55,7 @@ type configJSON struct {
 	ShortBreakDuration string `json:"short_break_duration"`
 	LongBreakDuration  string `json:"long_break_duration"`
 	LongBreakInterval  int    `json:"long_break_interval"`
+	DailyGoalPomodoros int    `json:"daily_goal_pomodoros"`
 	NotifyDesktop      bool   `json:"notify_desktop"`
 	NotifyBell         bool   `json:"notify_bell"`
 }
@@ -91,6 +94,9 @@ func LoadConfig() (Config, error) {
 	if raw.LongBreakInterval > 0 {
 		cfg.LongBreakInterval = raw.LongBreakInterval
 	}
+	if raw.DailyGoalPomodoros >= 0 {
+		cfg.DailyGoalPomodoros = raw.DailyGoalPomodoros
+	}
 	cfg.NotifyDesktop = raw.NotifyDesktop
 	cfg.NotifyBell = raw.NotifyBell
 
@@ -108,6 +114,7 @@ func SaveConfig(cfg Config) error {
 		ShortBreakDuration: cfg.ShortBreakDuration.String(),
 		LongBreakDuration:  cfg.LongBreakDuration.String(),
 		LongBreakInterval:  cfg.LongBreakInterval,
+		DailyGoalPomodoros: cfg.DailyGoalPomodoros,
 		NotifyDesktop:      cfg.NotifyDesktop,
 		NotifyBell:         cfg.NotifyBell,
 	}

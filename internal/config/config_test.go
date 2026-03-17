@@ -22,6 +22,9 @@ func TestDefaultConfig(t *testing.T) {
 	if cfg.LongBreakInterval != 4 {
 		t.Errorf("expected long break interval 4, got %d", cfg.LongBreakInterval)
 	}
+	if cfg.DailyGoalPomodoros != 0 {
+		t.Errorf("expected daily goal 0, got %d", cfg.DailyGoalPomodoros)
+	}
 	if !cfg.NotifyDesktop {
 		t.Error("expected notify desktop to be true")
 	}
@@ -49,6 +52,7 @@ func TestSaveAndLoadConfig(t *testing.T) {
 
 	cfg := DefaultConfig()
 	cfg.WorkDuration = 30 * time.Minute
+	cfg.DailyGoalPomodoros = 8
 	cfg.NotifyDesktop = false
 
 	if err := SaveConfig(cfg); err != nil {
@@ -67,6 +71,9 @@ func TestSaveAndLoadConfig(t *testing.T) {
 
 	if loaded.WorkDuration != 30*time.Minute {
 		t.Errorf("expected work duration 30m, got %v", loaded.WorkDuration)
+	}
+	if loaded.DailyGoalPomodoros != 8 {
+		t.Errorf("expected daily goal 8, got %d", loaded.DailyGoalPomodoros)
 	}
 	if loaded.NotifyDesktop {
 		t.Error("expected notify desktop to be false")

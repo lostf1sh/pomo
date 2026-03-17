@@ -30,6 +30,11 @@ var configShowCmd = &cobra.Command{
 		fmt.Printf("  Short Break Duration: %s\n", cfg.ShortBreakDuration)
 		fmt.Printf("  Long Break Duration:  %s\n", cfg.LongBreakDuration)
 		fmt.Printf("  Long Break Interval:  %d pomodoros\n", cfg.LongBreakInterval)
+		if cfg.DailyGoalPomodoros > 0 {
+			fmt.Printf("  Daily Goal:           %d pomodoros\n", cfg.DailyGoalPomodoros)
+		} else {
+			fmt.Println("  Daily Goal:           disabled")
+		}
 		fmt.Printf("  Desktop Notifications: %v\n", cfg.NotifyDesktop)
 		fmt.Printf("  Bell Notifications:    %v\n", cfg.NotifyBell)
 		fmt.Println()
@@ -46,6 +51,7 @@ var (
 	setShortBreakFlag time.Duration
 	setLongBreakFlag  time.Duration
 	setIntervalFlag   int
+	setDailyGoalFlag  int
 	setDesktopFlag    string
 	setBellFlag       string
 )
@@ -78,6 +84,13 @@ var configSetCmd = &cobra.Command{
 			cfg.LongBreakInterval = setIntervalFlag
 			changed = true
 		}
+		if cmd.Flags().Changed("daily-goal") {
+			if setDailyGoalFlag < 0 {
+				return fmt.Errorf("daily goal must be 0 or greater")
+			}
+			cfg.DailyGoalPomodoros = setDailyGoalFlag
+			changed = true
+		}
 		if cmd.Flags().Changed("desktop") {
 			cfg.NotifyDesktop = setDesktopFlag == "true" || setDesktopFlag == "on"
 			changed = true
@@ -106,6 +119,7 @@ func init() {
 	configSetCmd.Flags().DurationVar(&setShortBreakFlag, "short-break", 0, "Short break duration (e.g., 5m)")
 	configSetCmd.Flags().DurationVar(&setLongBreakFlag, "long-break", 0, "Long break duration (e.g., 15m)")
 	configSetCmd.Flags().IntVar(&setIntervalFlag, "interval", 0, "Pomodoros before long break")
+	configSetCmd.Flags().IntVar(&setDailyGoalFlag, "daily-goal", 0, "Daily pomodoro goal (0 disables)")
 	configSetCmd.Flags().StringVar(&setDesktopFlag, "desktop", "", "Desktop notifications (true/false)")
 	configSetCmd.Flags().StringVar(&setBellFlag, "bell", "", "Bell notifications (true/false)")
 

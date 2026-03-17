@@ -9,7 +9,8 @@ A terminal-based pomodoro timer with an interactive TUI, session tracking, and s
 - Full-screen TUI with large ASCII timer display
 - Work / Short Break / Long Break cycle with auto-advance
 - Session persistence with BoltDB — your history survives restarts
-- Statistics with streak tracking and per-task breakdown
+- Resume unfinished sessions after closing the TUI
+- Statistics with streak tracking, daily goals, and per-task breakdown
 - Desktop notifications + terminal bell
 - Configurable durations and intervals
 
@@ -48,6 +49,9 @@ pomo start --task "coding"
 # Start with custom work duration
 pomo start --task "reading" --work 45m
 
+# Resume the last unfinished session
+pomo resume
+
 # Running pomo without a subcommand also starts a session
 pomo
 ```
@@ -75,6 +79,9 @@ pomo stats --task "coding"
 pomo stats --period today
 pomo stats --period week
 pomo stats --period month
+
+# Machine-readable output
+pomo stats --json
 ```
 
 ### Configuration
@@ -86,6 +93,7 @@ pomo config show
 # Modify settings
 pomo config set --work 30m --short-break 10m
 pomo config set --long-break 20m --interval 3
+pomo config set --daily-goal 8
 pomo config set --desktop false --bell true
 ```
 
@@ -97,6 +105,7 @@ Default configuration:
 | Short break | 5m |
 | Long break | 15m |
 | Long break interval | 4 pomodoros |
+| Daily goal | disabled |
 | Desktop notifications | on |
 | Terminal bell | on |
 

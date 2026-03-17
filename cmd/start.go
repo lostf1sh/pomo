@@ -2,13 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/lostf1sh/pomo/internal/config"
-	"github.com/lostf1sh/pomo/internal/store"
 	"github.com/lostf1sh/pomo/internal/tui"
 	"github.com/spf13/cobra"
 )
@@ -32,17 +29,15 @@ var startCmd = &cobra.Command{
 			cfg.WorkDuration = workFlag
 		}
 
-		dataDir := config.DataDir()
-		if err := os.MkdirAll(dataDir, 0o755); err != nil {
-			return fmt.Errorf("creating data directory: %w", err)
-		}
-
-		dbPath := filepath.Join(dataDir, "pomo.db")
-		s, err := store.New(dbPath)
+		s, err := openStore()
 		if err != nil {
-			return fmt.Errorf("opening database: %w", err)
+			return err
 		}
 		defer s.Close()
+
+		if err := s.ClearActiveState(); err != nil {
+			return fmt.Errorf("clearing active session: %w", err)
+		}
 
 		m := tui.NewModel(cfg, s, taskFlag)
 		p := tea.NewProgram(m, tea.WithAltScreen())

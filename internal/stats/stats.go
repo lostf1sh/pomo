@@ -10,18 +10,25 @@ import (
 )
 
 type TaskStat struct {
-	Task       string
-	Pomodoros  int
-	TotalTime  time.Duration
+	Task      string        `json:"task"`
+	Pomodoros int           `json:"pomodoros"`
+	TotalTime time.Duration `json:"total_time"`
 }
 
 type Stats struct {
-	TotalPomodoros int
-	TotalWorkTime  time.Duration
-	AvgPerDay      float64
-	CurrentStreak  int
-	LongestStreak  int
-	TaskBreakdown  []TaskStat
+	TotalPomodoros int           `json:"total_pomodoros"`
+	TotalWorkTime  time.Duration `json:"total_work_time"`
+	AvgPerDay      float64       `json:"avg_per_day"`
+	CurrentStreak  int           `json:"current_streak"`
+	LongestStreak  int           `json:"longest_streak"`
+	TaskBreakdown  []TaskStat    `json:"task_breakdown"`
+}
+
+type GoalProgress struct {
+	Target    int  `json:"target"`
+	Completed int  `json:"completed"`
+	Remaining int  `json:"remaining"`
+	Met       bool `json:"met"`
 }
 
 func Compute(sessions []timer.Session) *Stats {
@@ -140,6 +147,31 @@ func FormatStats(s *Stats) string {
 	}
 
 	return b.String()
+}
+
+func ComputeGoalProgress(target int, sessions []timer.Session) *GoalProgress {
+	if target <= 0 {
+		return nil
+	}
+
+	completed := 0
+	for _, sess := range sessions {
+		if sess.Type == timer.Work && sess.Completed {
+			completed++
+		}
+	}
+
+	remaining := target - completed
+	if remaining < 0 {
+		remaining = 0
+	}
+
+	return &GoalProgress{
+		Target:    target,
+		Completed: completed,
+		Remaining: remaining,
+		Met:       completed >= target,
+	}
 }
 
 func formatDuration(d time.Duration) string {

@@ -124,3 +124,25 @@ func TestFormatStats(t *testing.T) {
 		t.Error("expected non-empty formatted stats")
 	}
 }
+
+func TestComputeGoalProgress(t *testing.T) {
+	now := time.Now()
+	progress := ComputeGoalProgress(3, []timer.Session{
+		{ID: "1", StartTime: now, EndTime: now.Add(25 * time.Minute), Type: timer.Work, Completed: true},
+		{ID: "2", StartTime: now.Add(time.Hour), EndTime: now.Add(85 * time.Minute), Type: timer.Work, Completed: true},
+		{ID: "3", StartTime: now.Add(2 * time.Hour), EndTime: now.Add(125 * time.Minute), Type: timer.ShortBreak, Completed: true},
+	})
+
+	if progress == nil {
+		t.Fatal("expected progress")
+	}
+	if progress.Completed != 2 {
+		t.Fatalf("expected completed 2, got %d", progress.Completed)
+	}
+	if progress.Remaining != 1 {
+		t.Fatalf("expected remaining 1, got %d", progress.Remaining)
+	}
+	if progress.Met {
+		t.Fatal("expected goal not met")
+	}
+}

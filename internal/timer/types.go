@@ -55,3 +55,15 @@ type Session struct {
 	Task      string      `json:"task"`
 	Completed bool        `json:"completed"`
 }
+
+// Snapshot represents resumable timer state persisted between CLI runs.
+type Snapshot struct {
+	State          TimerState    `json:"state"`
+	CurrentType    SessionType   `json:"current_type"`
+	Task           string        `json:"task"`
+	Remaining      time.Duration `json:"remaining"`
+	TotalDuration  time.Duration `json:"total_duration"`
+	PomodorosInSet int           `json:"pomodoros_in_set"`
+	CompletedTotal int           `json:"completed_total"`
+	CurrentSession *Session      `json:"current_session,omitempty"`
+}

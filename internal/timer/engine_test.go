@@ -164,3 +164,29 @@ func TestProgress(t *testing.T) {
 		t.Errorf("expected ~0.5 progress, got %f", p)
 	}
 }
+
+func TestSnapshotRestore(t *testing.T) {
+	e := NewEngine(shortConfig(), "deep work")
+	e.Start()
+	time.Sleep(100 * time.Millisecond)
+	e.Pause()
+
+	snapshot := e.Snapshot()
+	restored := NewEngineFromSnapshot(shortConfig(), snapshot)
+
+	if restored.State != Paused {
+		t.Fatalf("expected restored state paused, got %v", restored.State)
+	}
+	if restored.Task != "deep work" {
+		t.Fatalf("expected restored task deep work, got %s", restored.Task)
+	}
+	if restored.currentSession == nil {
+		t.Fatal("expected restored current session")
+	}
+	if restored.currentSession.StartTime.IsZero() {
+		t.Fatal("expected restored session start time")
+	}
+	if restored.Remaining <= 0 || restored.Remaining > shortConfig().WorkDuration {
+		t.Fatalf("expected remaining within session bounds, got %v", restored.Remaining)
+	}
+}

@@ -10,6 +10,8 @@ import (
 )
 
 var sessionsBucket = []byte("sessions")
+var activeStateBucket = []byte("active_state")
+var activeStateKey = []byte("current")
 
 type Store struct {
 	db *bolt.DB
@@ -23,6 +25,10 @@ func New(dbPath string) (*Store, error) {
 
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists(sessionsBucket)
+		if err != nil {
+			return err
+		}
+		_, err = tx.CreateBucketIfNotExists(activeStateBucket)
 		return err
 	})
 	if err != nil {
@@ -102,6 +108,45 @@ func (s *Store) GetAllSessions() ([]timer.Session, error) {
 	})
 
 	return sessions, err
+}
+
+func (s *Store) SaveActiveState(snapshot timer.Snapshot) error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(activeStateBucket)
+		data, err := json.Marshal(snapshot)
+		if err != nil {
+			return err
+		}
+		return b.Put(activeStateKey, data)
+	})
+}
+
+func (s *Store) GetActiveState() (*timer.Snapshot, error) {
+	var snapshot *timer.Snapshot
+
+	err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(activeStateBucket)
+		data := b.Get(activeStateKey)
+		if data == nil {
+			return nil
+		}
+
+		var loaded timer.Snapshot
+		if err := json.Unmarshal(data, &loaded); err != nil {
+			return err
+		}
+		snapshot = &loaded
+		return nil
+	})
+
+	return snapshot, err
+}
+
+func (s *Store) ClearActiveState() error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(activeStateBucket)
+		return b.Delete(activeStateKey)
+	})
 }
 
 func (s *Store) Close() error {

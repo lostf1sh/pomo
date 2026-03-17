@@ -1,34 +1,46 @@
 package tui
 
 import (
+	"time"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/lostf1sh/pomo/internal/config"
 	"github.com/lostf1sh/pomo/internal/notify"
+	"github.com/lostf1sh/pomo/internal/stats"
 	"github.com/lostf1sh/pomo/internal/store"
 	"github.com/lostf1sh/pomo/internal/timer"
 )
 
 type Model struct {
-	engine   *timer.Engine
-	store    *store.Store
-	notifier *notify.Notifier
-	config   config.Config
-	width    int
-	height   int
-	quitting bool
-	showHelp bool
+	engine         *timer.Engine
+	store          *store.Store
+	notifier       *notify.Notifier
+	config         config.Config
+	dailyCompleted int
+	width          int
+	height         int
+	quitting       bool
+	showHelp       bool
 }
 
 func NewModel(cfg config.Config, s *store.Store, task string) Model {
+	return NewModelWithEngine(cfg, s, timer.NewEngine(cfg, task))
+}
+
+func NewModelWithEngine(cfg config.Config, s *store.Store, engine *timer.Engine) Model {
 	return Model{
-		engine:   timer.NewEngine(cfg, task),
-		store:    s,
-		notifier: notify.New(cfg),
-		config:   cfg,
+		engine:         engine,
+		store:          s,
+		notifier:       notify.New(cfg),
+		config:         cfg,
+		dailyCompleted: loadTodayCompleted(s),
 	}
 }
 
 func (m Model) Init() tea.Cmd {
+	if m.engine != nil && m.engine.State == timer.Running {
+		return doTick()
+	}
 	return nil
 }
 
@@ -51,6 +63,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "r":
 			m.engine.Reset()
+			m.clearActiveState()
 			return m, nil
 
 		case "k":
@@ -72,12 +85,15 @@ func (m Model) handleStartPause() (tea.Model, tea.Cmd) {
 	switch m.engine.State {
 	case timer.Idle:
 		m.engine.Start()
+		m.saveActiveState()
 		return m, doTick()
 	case timer.Running:
 		m.engine.Pause()
+		m.saveActiveState()
 		return m, nil
 	case timer.Paused:
 		m.engine.Start()
+		m.saveActiveState()
 		return m, doTick()
 	}
 	return m, nil
@@ -88,6 +104,7 @@ func (m Model) handleSkip() (tea.Model, tea.Cmd) {
 	if sess != nil && m.store != nil {
 		_ = m.store.SaveSession(*sess)
 	}
+	m.clearActiveState()
 	return m, nil
 }
 
@@ -98,6 +115,9 @@ func (m Model) handleTick() (tea.Model, tea.Cmd) {
 		// Save completed session
 		if m.store != nil {
 			_ = m.store.SaveSession(*sess)
+		}
+		if sess.Type == timer.Work && sess.Completed {
+			m.dailyCompleted++
 		}
 
 		// Send notification
@@ -112,21 +132,50 @@ func (m Model) handleTick() (tea.Model, tea.Cmd) {
 			}
 		}
 
+		m.clearActiveState()
 		return m, nil
 	}
 
 	if m.engine.State == timer.Running {
+		m.saveActiveState()
 		return m, doTick()
 	}
 	return m, nil
 }
 
 func (m *Model) handleQuit() {
-	// Save incomplete session on quit
 	if m.engine.State == timer.Running || m.engine.State == timer.Paused {
-		sess := m.engine.Skip()
-		if sess != nil && m.store != nil {
-			_ = m.store.SaveSession(*sess)
-		}
+		m.saveActiveState()
+		return
 	}
+	m.clearActiveState()
+}
+
+func (m *Model) saveActiveState() {
+	if m.store == nil || m.engine == nil {
+		return
+	}
+	_ = m.store.SaveActiveState(*m.engine.Snapshot())
+}
+
+func (m *Model) clearActiveState() {
+	if m.store == nil {
+		return
+	}
+	_ = m.store.ClearActiveState()
+}
+
+func loadTodayCompleted(s *store.Store) int {
+	if s == nil {
+		return 0
+	}
+
+	now := time.Now()
+	from := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	sessions, err := s.GetSessions(from, now)
+	if err != nil {
+		return 0
+	}
+
+	return stats.Compute(sessions).TotalPomodoros
 }

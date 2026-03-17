@@ -52,6 +52,12 @@ func (m Model) View() string {
 	b.WriteString(pomodoroCountStyle.Foreground(color).Render(counter))
 	b.WriteString("\n")
 
+	if m.config.DailyGoalPomodoros > 0 {
+		goal := renderDailyGoal(m.dailyCompleted, m.config.DailyGoalPomodoros)
+		b.WriteString(pomodoroCountStyle.Foreground(color).Render(goal))
+		b.WriteString("\n")
+	}
+
 	// Help footer
 	help := helpText(m.engine.State, m.showHelp)
 	b.WriteString(helpStyle.Render(help))
@@ -117,6 +123,13 @@ func renderPomodoroCounter(current, total, completedTotal int) string {
 	}
 	counter := strings.Join(dots, " ")
 	return fmt.Sprintf("Pomodoros: [%s]  Total: %d", counter, completedTotal)
+}
+
+func renderDailyGoal(completed, target int) string {
+	if completed > target {
+		return fmt.Sprintf("Daily Goal: %d/%d completed", completed, target)
+	}
+	return fmt.Sprintf("Daily Goal: %d/%d", completed, target)
 }
 
 func helpText(state timer.TimerState, showHelp bool) string {

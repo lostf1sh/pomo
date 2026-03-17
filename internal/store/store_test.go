@@ -138,3 +138,53 @@ func TestGetAllSessions(t *testing.T) {
 		t.Fatalf("expected 3 sessions, got %d", len(result))
 	}
 }
+
+func TestActiveStateRoundTrip(t *testing.T) {
+	s := newTestStore(t)
+
+	snapshot := timer.Snapshot{
+		State:          timer.Paused,
+		CurrentType:    timer.Work,
+		Task:           "writing",
+		Remaining:      12 * time.Minute,
+		TotalDuration:  25 * time.Minute,
+		PomodorosInSet: 2,
+		CompletedTotal: 5,
+		CurrentSession: &timer.Session{
+			ID:        "resume-1",
+			StartTime: time.Now().Add(-13 * time.Minute),
+			Type:      timer.Work,
+			Task:      "writing",
+		},
+	}
+
+	if err := s.SaveActiveState(snapshot); err != nil {
+		t.Fatal(err)
+	}
+
+	loaded, err := s.GetActiveState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if loaded == nil {
+		t.Fatal("expected active state")
+	}
+	if loaded.Task != "writing" {
+		t.Fatalf("expected task writing, got %s", loaded.Task)
+	}
+	if loaded.CurrentSession == nil || loaded.CurrentSession.ID != "resume-1" {
+		t.Fatal("expected current session to round trip")
+	}
+
+	if err := s.ClearActiveState(); err != nil {
+		t.Fatal(err)
+	}
+
+	cleared, err := s.GetActiveState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cleared != nil {
+		t.Fatal("expected cleared active state to be nil")
+	}
+}

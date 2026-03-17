@@ -24,13 +24,42 @@ type Engine struct {
 
 func NewEngine(cfg config.Config, task string) *Engine {
 	return &Engine{
-		Config:      cfg,
-		State:       Idle,
-		CurrentType: Work,
-		Task:        task,
-		Remaining:   cfg.WorkDuration,
+		Config:        cfg,
+		State:         Idle,
+		CurrentType:   Work,
+		Task:          task,
+		Remaining:     cfg.WorkDuration,
 		TotalDuration: cfg.WorkDuration,
 	}
+}
+
+func NewEngineFromSnapshot(cfg config.Config, snapshot *Snapshot) *Engine {
+	e := &Engine{
+		Config:         cfg,
+		State:          snapshot.State,
+		CurrentType:    snapshot.CurrentType,
+		Task:           snapshot.Task,
+		Remaining:      snapshot.Remaining,
+		TotalDuration:  snapshot.TotalDuration,
+		PomodorosInSet: snapshot.PomodorosInSet,
+		CompletedTotal: snapshot.CompletedTotal,
+	}
+
+	if e.TotalDuration <= 0 {
+		e.TotalDuration = e.durationForType(e.CurrentType)
+	}
+
+	if snapshot.CurrentSession != nil {
+		sess := *snapshot.CurrentSession
+		e.currentSession = &sess
+		e.startTime = sess.StartTime
+	}
+
+	if e.State == Running {
+		e.endTime = time.Now().Add(e.Remaining)
+	}
+
+	return e
 }
 
 func (e *Engine) Start() {
@@ -136,6 +165,33 @@ func (e *Engine) Progress() float64 {
 	}
 	elapsed := e.TotalDuration - e.Remaining
 	return float64(elapsed) / float64(e.TotalDuration)
+}
+
+func (e *Engine) Snapshot() *Snapshot {
+	remaining := e.Remaining
+	if e.State == Running {
+		remaining = time.Until(e.endTime)
+		if remaining < 0 {
+			remaining = 0
+		}
+	}
+
+	snapshot := &Snapshot{
+		State:          e.State,
+		CurrentType:    e.CurrentType,
+		Task:           e.Task,
+		Remaining:      remaining,
+		TotalDuration:  e.TotalDuration,
+		PomodorosInSet: e.PomodorosInSet,
+		CompletedTotal: e.CompletedTotal,
+	}
+
+	if e.currentSession != nil {
+		sess := *e.currentSession
+		snapshot.CurrentSession = &sess
+	}
+
+	return snapshot
 }
 
 func (e *Engine) durationForType(st SessionType) time.Duration {
