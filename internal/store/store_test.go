@@ -188,3 +188,149 @@ func TestActiveStateRoundTrip(t *testing.T) {
 		t.Fatal("expected cleared active state to be nil")
 	}
 }
+
+func TestImportSessionsMerge(t *testing.T) {
+	s := newTestStore(t)
+	base := time.Date(2024, 6, 1, 10, 0, 0, 0, time.UTC)
+	existing := timer.Session{
+		ID:        "e1",
+		StartTime: base,
+		EndTime:   base.Add(25 * time.Minute),
+		Type:      timer.Work,
+		Task:      "a",
+		Completed: true,
+	}
+	if err := s.SaveSession(existing); err != nil {
+		t.Fatal(err)
+	}
+
+	incoming := []timer.Session{
+		existing, // duplicate key
+		{
+			ID:        "e2",
+			StartTime: base.Add(time.Hour),
+			EndTime:   base.Add(time.Hour + 25*time.Minute),
+			Type:      timer.Work,
+			Task:      "b",
+			Completed: true,
+		},
+	}
+
+	added, skipped, err := s.ImportSessions(incoming)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if added != 1 || skipped != 1 {
+		t.Fatalf("added=%d skipped=%d, want 1,1", added, skipped)
+	}
+
+	all, err := s.GetAllSessions()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(all) != 2 {
+		t.Fatalf("expected 2 sessions, got %d", len(all))
+	}
+}
+
+func TestReplaceAllSessions(t *testing.T) {
+	s := newTestStore(t)
+	now := time.Now()
+	for i := 0; i < 3; i++ {
+		sess := timer.Session{
+			ID:        string(rune('x' + i)),
+			StartTime: now.Add(time.Duration(i) * time.Hour),
+			EndTime:   now.Add(time.Duration(i)*time.Hour + 25*time.Minute),
+			Type:      timer.Work,
+			Task:      "old",
+			Completed: true,
+		}
+		if err := s.SaveSession(sess); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	replacement := []timer.Session{
+		{
+			ID:        "only",
+			StartTime: now.Add(100 * time.Hour),
+			EndTime:   now.Add(100*time.Hour + 25*time.Minute),
+			Type:      timer.Work,
+			Task:      "new",
+			Completed: true,
+		},
+	}
+	if err := s.ReplaceAllSessions(replacement); err != nil {
+		t.Fatal(err)
+	}
+
+	all, err := s.GetAllSessions()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(all) != 1 || all[0].Task != "new" {
+		t.Fatalf("got %+v", all)
+	}
+}
+
+func TestCountSessions(t *testing.T) {
+	s := newTestStore(t)
+	n, err := s.CountSessions()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 0 {
+		t.Fatalf("count %d", n)
+	}
+	now := time.Now()
+	if err := s.SaveSession(timer.Session{
+		ID: "1", StartTime: now, EndTime: now.Add(time.Minute), Type: timer.Work, Task: "t", Completed: true,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	n, err = s.CountSessions()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 1 {
+		t.Fatalf("count %d", n)
+	}
+}
+
+func TestDateRange(t *testing.T) {
+	s := newTestStore(t)
+	a := time.Date(2023, 1, 10, 12, 0, 0, 0, time.UTC)
+	b := time.Date(2024, 2, 20, 12, 0, 0, 0, time.UTC)
+	for _, st := range []time.Time{b, a} {
+		sess := timer.Session{
+			ID:        st.Format(time.RFC3339Nano),
+			StartTime: st,
+			EndTime:   st.Add(time.Minute),
+			Type:      timer.Work,
+			Task:      "t",
+			Completed: true,
+		}
+		if err := s.SaveSession(sess); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	oldest, newest, err := s.DateRange()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !oldest.Equal(a) || !newest.Equal(b) {
+		t.Fatalf("range %v — %v, want %v — %v", oldest, newest, a, b)
+	}
+}
+
+func TestDateRangeEmpty(t *testing.T) {
+	s := newTestStore(t)
+	oldest, newest, err := s.DateRange()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !oldest.IsZero() || !newest.IsZero() {
+		t.Fatalf("expected zero times, got %v %v", oldest, newest)
+	}
+}

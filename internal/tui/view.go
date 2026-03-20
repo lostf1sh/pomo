@@ -13,7 +13,20 @@ func (m Model) View() string {
 		return ""
 	}
 
-	color := colorForSessionType(int(m.engine.CurrentType))
+	color := colorForSessionType(m.colors, int(m.engine.CurrentType))
+
+	titleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(m.colors.Text).
+		MarginBottom(1)
+
+	taskStyle := lipgloss.NewStyle().
+		Foreground(m.colors.Accent).
+		Bold(true)
+
+	helpStyle := lipgloss.NewStyle().
+		Foreground(m.colors.Muted).
+		MarginTop(1)
 
 	var b strings.Builder
 
@@ -43,7 +56,7 @@ func (m Model) View() string {
 
 	// Progress bar
 	progress := m.engine.Progress()
-	progressBar := renderProgressBar(progress, 40, color)
+	progressBar := renderProgressBar(progress, 40, color, m.colors.ProgressBG)
 	b.WriteString(progressBarStyle.Render(progressBar))
 	b.WriteString("\n")
 
@@ -95,15 +108,15 @@ func stateLabel(s timer.TimerState) string {
 	}
 }
 
-func renderProgressBar(progress float64, width int, color lipgloss.Color) string {
+func renderProgressBar(progress float64, width int, filledColor, emptyColor lipgloss.Color) string {
 	filled := int(progress * float64(width))
 	if filled > width {
 		filled = width
 	}
 	empty := width - filled
 
-	filledStyle := lipgloss.NewStyle().Foreground(color)
-	emptyStyle := lipgloss.NewStyle().Foreground(mutedColor)
+	filledStyle := lipgloss.NewStyle().Foreground(filledColor)
+	emptyStyle := lipgloss.NewStyle().Foreground(emptyColor)
 
 	bar := filledStyle.Render(strings.Repeat("█", filled)) +
 		emptyStyle.Render(strings.Repeat("░", empty))

@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/lostf1sh/pomo/internal/config"
+	"github.com/lostf1sh/pomo/internal/theme"
 	"github.com/spf13/cobra"
 )
 
@@ -37,6 +39,7 @@ var configShowCmd = &cobra.Command{
 		}
 		fmt.Printf("  Desktop Notifications: %v\n", cfg.NotifyDesktop)
 		fmt.Printf("  Bell Notifications:    %v\n", cfg.NotifyBell)
+		fmt.Printf("  Theme:                 %s\n", cfg.Theme)
 		fmt.Println()
 		fmt.Printf("  Config file: %s\n", config.ConfigDir())
 		fmt.Printf("  Data file:   %s\n", config.DataDir())
@@ -54,6 +57,7 @@ var (
 	setDailyGoalFlag  int
 	setDesktopFlag    string
 	setBellFlag       string
+	setThemeFlag      string
 )
 
 var configSetCmd = &cobra.Command{
@@ -99,6 +103,13 @@ var configSetCmd = &cobra.Command{
 			cfg.NotifyBell = setBellFlag == "true" || setBellFlag == "on"
 			changed = true
 		}
+		if cmd.Flags().Changed("theme") {
+			if _, ok := theme.Get(setThemeFlag); !ok {
+				return fmt.Errorf("unknown theme %q; available: %s", setThemeFlag, strings.Join(theme.Names(), ", "))
+			}
+			cfg.Theme = setThemeFlag
+			changed = true
+		}
 
 		if !changed {
 			fmt.Println("No changes specified. Use --help to see available options.")
@@ -122,6 +133,7 @@ func init() {
 	configSetCmd.Flags().IntVar(&setDailyGoalFlag, "daily-goal", 0, "Daily pomodoro goal (0 disables)")
 	configSetCmd.Flags().StringVar(&setDesktopFlag, "desktop", "", "Desktop notifications (true/false)")
 	configSetCmd.Flags().StringVar(&setBellFlag, "bell", "", "Bell notifications (true/false)")
+	configSetCmd.Flags().StringVar(&setThemeFlag, "theme", "", "Color theme (default, catppuccin-mocha, dracula, gruvbox, nord, tokyo-night, solarized)")
 
 	configCmd.AddCommand(configShowCmd)
 	configCmd.AddCommand(configSetCmd)

@@ -1,23 +1,35 @@
 package tui
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"github.com/charmbracelet/lipgloss"
+	"github.com/lostf1sh/pomo/internal/theme"
+)
+
+// ThemeColors holds lipgloss colors derived from a theme.Theme.
+type ThemeColors struct {
+	Work       lipgloss.Color
+	ShortBreak lipgloss.Color
+	LongBreak  lipgloss.Color
+	Muted      lipgloss.Color
+	Text       lipgloss.Color
+	Accent     lipgloss.Color
+	ProgressBG lipgloss.Color
+}
+
+// NewThemeColors converts hex strings from theme.Theme to lipgloss colors.
+func NewThemeColors(t theme.Theme) ThemeColors {
+	return ThemeColors{
+		Work:       lipgloss.Color(t.Work),
+		ShortBreak: lipgloss.Color(t.ShortBreak),
+		LongBreak:  lipgloss.Color(t.LongBreak),
+		Muted:      lipgloss.Color(t.Muted),
+		Text:       lipgloss.Color(t.Text),
+		Accent:     lipgloss.Color(t.Accent),
+		ProgressBG: lipgloss.Color(t.ProgressBG),
+	}
+}
 
 var (
-	workColor      = lipgloss.Color("#FF6B6B")
-	shortBreakColor = lipgloss.Color("#51CF66")
-	longBreakColor  = lipgloss.Color("#339AF0")
-	mutedColor     = lipgloss.Color("#666666")
-	whiteColor     = lipgloss.Color("#FFFFFF")
-
-	titleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(whiteColor).
-			MarginBottom(1)
-
-	taskStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFD43B")).
-			Bold(true)
-
 	timerStyle = lipgloss.NewStyle().
 			Bold(true).
 			MarginTop(1).
@@ -30,23 +42,19 @@ var (
 	pomodoroCountStyle = lipgloss.NewStyle().
 				MarginBottom(1)
 
-	helpStyle = lipgloss.NewStyle().
-			Foreground(mutedColor).
-			MarginTop(1)
-
 	progressBarStyle = lipgloss.NewStyle().
 				MarginBottom(1)
 )
 
-func colorForSessionType(st int) lipgloss.Color {
+func colorForSessionType(colors ThemeColors, st int) lipgloss.Color {
 	switch st {
 	case 0: // Work
-		return workColor
+		return colors.Work
 	case 1: // ShortBreak
-		return shortBreakColor
+		return colors.ShortBreak
 	case 2: // LongBreak
-		return longBreakColor
+		return colors.LongBreak
 	default:
-		return whiteColor
+		return colors.Text
 	}
 }

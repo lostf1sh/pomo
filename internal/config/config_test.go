@@ -31,6 +31,9 @@ func TestDefaultConfig(t *testing.T) {
 	if !cfg.NotifyBell {
 		t.Error("expected notify bell to be true")
 	}
+	if cfg.Theme != "default" {
+		t.Errorf("expected theme default, got %q", cfg.Theme)
+	}
 }
 
 func TestLoadConfigDefault(t *testing.T) {
@@ -54,6 +57,7 @@ func TestSaveAndLoadConfig(t *testing.T) {
 	cfg.WorkDuration = 30 * time.Minute
 	cfg.DailyGoalPomodoros = 8
 	cfg.NotifyDesktop = false
+	cfg.Theme = "nord"
 
 	if err := SaveConfig(cfg); err != nil {
 		t.Fatal(err)
@@ -77,6 +81,9 @@ func TestSaveAndLoadConfig(t *testing.T) {
 	}
 	if loaded.NotifyDesktop {
 		t.Error("expected notify desktop to be false")
+	}
+	if loaded.Theme != "nord" {
+		t.Errorf("expected theme nord, got %q", loaded.Theme)
 	}
 }
 

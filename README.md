@@ -95,6 +95,7 @@ pomo config set --work 30m --short-break 10m
 pomo config set --long-break 20m --interval 3
 pomo config set --daily-goal 8
 pomo config set --desktop false --bell true
+pomo config set --theme dracula
 ```
 
 Default configuration:
@@ -108,6 +109,50 @@ Default configuration:
 | Daily goal | disabled |
 | Desktop notifications | on |
 | Terminal bell | on |
+| Theme | `default` |
+
+### Themes
+
+pomo comes with 7 built-in color themes:
+
+| Theme | |
+|-------|---|
+| `default` | Classic red/green/blue |
+| `catppuccin-mocha` | Pastel warmth |
+| `dracula` | Dark purple aesthetic |
+| `gruvbox` | Retro earthy tones |
+| `nord` | Arctic minimal |
+| `tokyo-night` | Neon city vibes |
+| `solarized` | Precision colors |
+
+```bash
+# List available themes
+pomo theme list
+
+# Set a theme
+pomo config set --theme dracula
+# or
+pomo theme set nord
+
+# Preview colors
+pomo theme preview catppuccin-mocha
+```
+
+### Sync / Backup
+
+```bash
+# Export all data
+pomo sync export --output ~/pomo-backup.json
+
+# Import (merge with existing)
+pomo sync import ~/pomo-backup.json
+
+# Import (replace all data)
+pomo sync import ~/pomo-backup.json --replace
+
+# Check database info
+pomo sync status
+```
 
 ## Data Storage
 

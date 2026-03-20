@@ -152,3 +152,91 @@ func (s *Store) ClearActiveState() error {
 func (s *Store) Close() error {
 	return s.db.Close()
 }
+
+// ImportSessions adds sessions whose StartTime key is not already present.
+func (s *Store) ImportSessions(sessions []timer.Session) (added, skipped int, err error) {
+	err = s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(sessionsBucket)
+		for _, sess := range sessions {
+			key := []byte(sess.StartTime.Format(time.RFC3339Nano))
+			if b.Get(key) != nil {
+				skipped++
+				continue
+			}
+			data, err := json.Marshal(sess)
+			if err != nil {
+				return err
+			}
+			if err := b.Put(key, data); err != nil {
+				return err
+			}
+			added++
+		}
+		return nil
+	})
+	return added, skipped, err
+}
+
+// ReplaceAllSessions removes all stored sessions and writes the given list.
+func (s *Store) ReplaceAllSessions(sessions []timer.Session) error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(sessionsBucket)
+		var keys [][]byte
+		if err := b.ForEach(func(k, v []byte) error {
+			keys = append(keys, append([]byte(nil), k...))
+			return nil
+		}); err != nil {
+			return err
+		}
+		for _, k := range keys {
+			if err := b.Delete(k); err != nil {
+				return err
+			}
+		}
+		for _, sess := range sessions {
+			key := []byte(sess.StartTime.Format(time.RFC3339Nano))
+			data, err := json.Marshal(sess)
+			if err != nil {
+				return err
+			}
+			if err := b.Put(key, data); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// CountSessions returns the number of sessions in the store.
+func (s *Store) CountSessions() (int, error) {
+	var n int
+	err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(sessionsBucket)
+		return b.ForEach(func(k, v []byte) error {
+			n++
+			return nil
+		})
+	})
+	return n, err
+}
+
+// DateRange returns the oldest and newest session StartTime values.
+// If there are no sessions, both times are zero.
+func (s *Store) DateRange() (oldest, newest time.Time, err error) {
+	err = s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(sessionsBucket)
+		c := b.Cursor()
+		firstK, _ := c.First()
+		if firstK == nil {
+			return nil
+		}
+		lastK, _ := c.Last()
+		oldest, err = time.Parse(time.RFC3339Nano, string(firstK))
+		if err != nil {
+			return err
+		}
+		newest, err = time.Parse(time.RFC3339Nano, string(lastK))
+		return err
+	})
+	return oldest, newest, err
+}

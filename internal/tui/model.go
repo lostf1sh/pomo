@@ -8,6 +8,7 @@ import (
 	"github.com/lostf1sh/pomo/internal/notify"
 	"github.com/lostf1sh/pomo/internal/stats"
 	"github.com/lostf1sh/pomo/internal/store"
+	"github.com/lostf1sh/pomo/internal/theme"
 	"github.com/lostf1sh/pomo/internal/timer"
 )
 
@@ -16,6 +17,7 @@ type Model struct {
 	store          *store.Store
 	notifier       *notify.Notifier
 	config         config.Config
+	colors         ThemeColors
 	dailyCompleted int
 	width          int
 	height         int
@@ -28,11 +30,18 @@ func NewModel(cfg config.Config, s *store.Store, task string) Model {
 }
 
 func NewModelWithEngine(cfg config.Config, s *store.Store, engine *timer.Engine) Model {
+	th := theme.Default()
+	if cfg.Theme != "" {
+		if t, ok := theme.Get(cfg.Theme); ok {
+			th = t
+		}
+	}
 	return Model{
 		engine:         engine,
 		store:          s,
 		notifier:       notify.New(cfg),
 		config:         cfg,
+		colors:         NewThemeColors(th),
 		dailyCompleted: loadTodayCompleted(s),
 	}
 }
