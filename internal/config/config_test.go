@@ -57,6 +57,7 @@ func TestSaveAndLoadConfig(t *testing.T) {
 	cfg.WorkDuration = 30 * time.Minute
 	cfg.DailyGoalPomodoros = 8
 	cfg.NotifyDesktop = false
+	cfg.Sound = "bell"
 	cfg.Theme = "nord"
 
 	if err := SaveConfig(cfg); err != nil {
@@ -81,6 +82,9 @@ func TestSaveAndLoadConfig(t *testing.T) {
 	}
 	if loaded.NotifyDesktop {
 		t.Error("expected notify desktop to be false")
+	}
+	if loaded.Sound != "bell" {
+		t.Errorf("expected sound bell, got %q", loaded.Sound)
 	}
 	if loaded.Theme != "nord" {
 		t.Errorf("expected theme nord, got %q", loaded.Theme)

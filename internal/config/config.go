@@ -15,6 +15,7 @@ type Config struct {
 	DailyGoalPomodoros int           `json:"daily_goal_pomodoros"`
 	NotifyDesktop      bool          `json:"notify_desktop"`
 	NotifyBell         bool          `json:"notify_bell"`
+	Sound              string        `json:"sound"`
 	Theme              string        `json:"theme"`
 }
 
@@ -27,6 +28,7 @@ func DefaultConfig() Config {
 		DailyGoalPomodoros: 0,
 		NotifyDesktop:      true,
 		NotifyBell:         true,
+		Sound:              "",
 		Theme:              "default",
 	}
 }
@@ -60,6 +62,7 @@ type configJSON struct {
 	DailyGoalPomodoros int    `json:"daily_goal_pomodoros"`
 	NotifyDesktop      bool   `json:"notify_desktop"`
 	NotifyBell         bool   `json:"notify_bell"`
+	Sound              string `json:"sound"`
 	Theme              string `json:"theme"`
 }
 
@@ -102,6 +105,7 @@ func LoadConfig() (Config, error) {
 	}
 	cfg.NotifyDesktop = raw.NotifyDesktop
 	cfg.NotifyBell = raw.NotifyBell
+	cfg.Sound = raw.Sound
 	cfg.Theme = raw.Theme
 	if cfg.Theme == "" {
 		cfg.Theme = "default"
@@ -124,6 +128,7 @@ func SaveConfig(cfg Config) error {
 		DailyGoalPomodoros: cfg.DailyGoalPomodoros,
 		NotifyDesktop:      cfg.NotifyDesktop,
 		NotifyBell:         cfg.NotifyBell,
+		Sound:              cfg.Sound,
 		Theme:              cfg.Theme,
 	}
 
