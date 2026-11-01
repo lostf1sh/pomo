@@ -11,8 +11,8 @@ A terminal-based pomodoro timer with an interactive TUI, session tracking, and s
 - Session persistence with BoltDB — your history survives restarts
 - Resume unfinished sessions after closing the TUI
 - Statistics with streak tracking, daily goals, and per-task breakdown
-- Desktop notifications + terminal bell
-- Configurable durations and intervals
+- Desktop notifications + audio alerts (presets & custom sound files)
+- Configurable durations, intervals, and sounds
 
 ## Installation
 
@@ -95,6 +95,8 @@ pomo config set --work 30m --short-break 10m
 pomo config set --long-break 20m --interval 3
 pomo config set --daily-goal 8
 pomo config set --desktop false --bell true
+pomo config set --sound alarm
+pomo config set --sound ~/Music/chime.wav
 pomo config set --theme dracula
 ```
 
@@ -109,6 +111,7 @@ Default configuration:
 | Daily goal | disabled |
 | Desktop notifications | on |
 | Terminal bell | on |
+| Sound | `default` |
 | Theme | `default` |
 
 ### Themes
