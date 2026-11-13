@@ -133,7 +133,7 @@ func init() {
 	configSetCmd.Flags().IntVar(&setDailyGoalFlag, "daily-goal", 0, "Daily pomodoro goal (0 disables)")
 	configSetCmd.Flags().StringVar(&setDesktopFlag, "desktop", "", "Desktop notifications (true/false)")
 	configSetCmd.Flags().StringVar(&setBellFlag, "bell", "", "Bell notifications (true/false)")
-	configSetCmd.Flags().StringVar(&setThemeFlag, "theme", "", "Color theme (default, catppuccin-mocha, dracula, gruvbox, nord, tokyo-night, solarized)")
+	configSetCmd.Flags().StringVar(&setThemeFlag, "theme", "", "Color theme (default, catppuccin-mocha, dracula, gruvbox, nord, tokyo-night, solarized, omarchy)")
 
 	configCmd.AddCommand(configShowCmd)
 	configCmd.AddCommand(configSetCmd)

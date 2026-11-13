@@ -124,6 +124,9 @@ pomo comes with 7 built-in color themes:
 | `nord` | Arctic minimal |
 | `tokyo-night` | Neon city vibes |
 | `solarized` | Precision colors |
+| `omarchy` | Follows the active [Omarchy](https://omarchy.org) desktop theme (listed only on Omarchy) |
+
+The `omarchy` theme reads `~/.local/state/omarchy/current/theme/colors.toml` each time pomo starts: work uses the theme's `accent` (or `color1`), short break `color2`, long break `color4`, the progress track `color8`, text `foreground`, the task name `color1`, and the key hints a blend of `color8` and `foreground` so they stay readable.
 
 ```bash
 # List available themes

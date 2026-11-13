@@ -100,6 +100,9 @@ var Themes = map[string]Theme{
 
 // Get returns a theme by name.
 func Get(name string) (Theme, bool) {
+	if name == OmarchyName {
+		return LoadOmarchy()
+	}
 	t, ok := Themes[name]
 	return t, ok
 }
@@ -109,6 +112,9 @@ func Names() []string {
 	names := make([]string, 0, len(Themes))
 	for n := range Themes {
 		names = append(names, n)
+	}
+	if _, ok := LoadOmarchy(); ok {
+		names = append(names, OmarchyName)
 	}
 	sort.Strings(names)
 	return names
