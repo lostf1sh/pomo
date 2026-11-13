@@ -45,6 +45,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestNamesSortedAndComplete(t *testing.T) {
+	t.Setenv("XDG_STATE_HOME", t.TempDir()) // no Omarchy theme: only built-ins
 	names := Names()
 	if len(names) != len(Themes) {
 		t.Fatalf("Names() len %d, want %d", len(names), len(Themes))
